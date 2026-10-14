@@ -187,7 +187,6 @@ if run_analysis:
                     title=f"Biểu đồ so sánh giá thật và kết quả dự báo cổ phiếu {ticker}",
                     xaxis_title="Số phiên thời gian giao dịch",
                     yaxis_title="Mức giá đóng cửa",
-                    legend_alignment="left",
                     height=500
                 )
                 st.plotly_chart(fig, use_container_width=True)
