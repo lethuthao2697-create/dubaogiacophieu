@@ -48,7 +48,6 @@ end_date = st.sidebar.date_input("📆 Ngày kết thúc phân tích:", datetime
 forecast_days = st.sidebar.slider("🔮 Số ngày muốn dự đoán tương lai:", min_value=10, max_value=30, value=10)
 
 st.sidebar.markdown("---")
-# Nút bấm được định dạng làm nổi bật
 run_analysis = st.sidebar.button("🚀 Bắt đầu Phân tích & Dự đoán", use_container_width=True)
 
 # Giao diện chính giữa màn hình
@@ -130,7 +129,6 @@ if run_analysis:
         if df.empty:
             st.error(f"❌ Không tìm thấy dữ liệu cho mã cổ phiếu '{ticker}'. Bạn hãy kiểm tra lại ký tự xem đúng chưa nhé!")
         else:
-            # Khối hiển thị thông số tổng quan nhanh
             col1, col2, col3 = st.columns(3)
             with col1:
                 st.info(f"🔠 **Mã cổ phiếu:** {ticker}")
@@ -145,7 +143,6 @@ if run_analysis:
             data_values = df[['Close']].values
             model, scaler, y_test_real, test_pred, train_scaled, test_scaled = train_lstm_model(data_values)
             
-            # KẾT QUẢ KIỂM ĐỊNH MÔ HÌNH
             st.markdown("---")
             st.subheader("🎯 Kết quả kiểm định mô hình (Đo lường trên tập Test)")
             rmse = np.sqrt(mean_squared_error(y_test_real, test_pred))
@@ -157,7 +154,6 @@ if run_analysis:
             m_col2.metric("Chỉ số MAE (Sai số tuyệt đối trung bình)", f"{mae:.2f}")
             m_col3.metric("Chỉ số R² Score (Độ chính xác)", f"{r2:.4f}")
             
-            # TIẾN HÀNH DỰ ĐOÁN TƯƠNG LAI THEO SỐ NGÀY NGƯỜI DÙNG CHỌN
             last_60_days = np.vstack((train_scaled, test_scaled))[-60:]
             last_60_days = last_60_days.reshape(1, 60, 1)
             
@@ -177,7 +173,6 @@ if run_analysis:
             future_dates = pd.date_range(start=df.index[-1] + pd.Timedelta(days=1), periods=forecast_days)
             df_forecast = pd.DataFrame(data=future_predictions, index=future_dates, columns=['Giá dự đoán'])
             
-            # BIỂU DIỄN KẾT QUẢ DỰ ĐOÁN
             st.markdown("---")
             st.subheader(f"🔮 Kết quả dự đoán giá đóng cửa trong {forecast_days} ngày tới")
             
@@ -188,10 +183,7 @@ if run_analysis:
                 st.dataframe(df_forecast.style.format("{:.2f}").background_gradient(cmap='Blues'), use_container_width=True)
                 
             with f_col2:
-                # Tạo biểu đồ Plotly phối màu xanh dương chuyên nghiệp
                 fig = go.Figure()
-                
-                # Giá thật thực tế - Màu Xanh Đậm (Navy)
                 fig.add_trace(go.Scatter(
                     x=list(range(len(y_test_real))), 
                     y=y_test_real.flatten(),
@@ -199,8 +191,6 @@ if run_analysis:
                     name='Giá thật thực tế (Tập Test)',
                     line=dict(color='#002B49', width=2)
                 ))
-                
-                # Giá mô hình đoán thử - Màu Xanh Lam Nhạt (Sky Blue)
                 fig.add_trace(go.Scatter(
                     x=list(range(len(test_pred))), 
                     y=test_pred.flatten(),
@@ -208,8 +198,6 @@ if run_analysis:
                     name='Giá mô hình đoán thử',
                     line=dict(color='#64B5F6', width=2)
                 ))
-                
-                # Dự báo tương lai - Đường đứt nét màu Xanh Dương Neon nổi bật
                 future_x = list(range(len(y_test_real), len(y_test_real) + forecast_days))
                 fig.add_trace(go.Scatter(
                     x=future_x, 
@@ -219,8 +207,16 @@ if run_analysis:
                     line=dict(dash='dash', color='#007BFF', width=3),
                     marker=dict(size=6, color='#0056b3')
                 ))
-                
                 fig.update_layout(
                     title=f"Biểu đồ phân tích và xu hướng giá cổ phiếu {ticker}",
                     xaxis_title="Số phiên thời gian giao dịch",
                     yaxis_title="Mức giá đóng cửa",
+                    paper_bgcolor='#f8f9fa',
+                    plot_bgcolor='#ffffff',
+                    height=500
+                )
+                fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='#E3F2FD')
+                fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='#E3F2FD')
+                
+                st.plotly_chart(fig, use_container_width=True)
+else:
