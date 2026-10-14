@@ -22,43 +22,25 @@ np.random.seed(seed)
 tf.random.set_seed(seed)
 random.seed(seed)
 
-# Tự động chèn CSS cấu hình màu sắc giao diện tông Xanh Dương bắt mắt
-st.markdown("""
-    <style>
-        /* Màu chữ tiêu đề chính */
-        h1 { color: #0056b3 !important; font-weight: 700; }
-        /* Màu chữ tiêu đề phụ */
-        h2, h3 { color: #007bff !important; }
-        /* Định dạng các khối thông báo mẹo nhỏ */
-        .stAlert { border-left: 5px solid #007bff; background-color: #f0f7ff; }
-        /* Tùy chỉnh màu đường kẻ ngang phân cách */
-        hr { border-top: 2px solid #b3d7ff; }
-    </style>
-""", unsafe_allow_html=True)
-
 # ==============================================================================
 # GIAO DIỆN MENU BÊN TRÁI (SIDEBAR)
 # ==============================================================================
-st.sidebar.markdown("<h2 style='color: #0056b3; text-align: center;'>🔵 CẤU HÌNH</h2>", unsafe_allow_html=True)
-st.sidebar.markdown("---")
+st.sidebar.header("Cấu Hình Ứng Dụng")
 
-ticker = st.sidebar.text_input("🔹 Nhập mã cổ phiếu (yfinance format):", value="VNM.VN").upper()
-start_date = st.sidebar.date_input("📅 Ngày bắt đầu phân tích:", datetime(2018, 1, 1))
-end_date = st.sidebar.date_input("📆 Ngày kết thúc phân tích:", datetime(2026, 10, 14))
-forecast_days = st.sidebar.slider("🔮 Số ngày muốn dự đoán tương lai:", min_value=10, max_value=30, value=10)
+ticker = st.sidebar.text_input("Nhập mã cổ phiếu (Ví dụ: VNM.VN, FPT.VN, AAPL):", value="VNM.VN").upper()
+start_date = st.sidebar.date_input("Ngày bắt đầu phân tích:", datetime(2018, 1, 1))
+end_date = st.sidebar.date_input("Ngày kết thúc phân tích:", datetime(2026, 10, 14))
+forecast_days = st.sidebar.slider("Số ngày muốn dự đoán tương lai:", min_value=10, max_value=30, value=10)
 
-st.sidebar.markdown("---")
-run_analysis = st.sidebar.button("🚀 Bắt đầu Phân tích & Dự đoán", use_container_width=True)
+run_analysis = st.sidebar.button("Bắt đầu Phân tích & Dự đoán")
 
-# Giao diện chính giữa màn hình
-st.title("📈 Ứng Dụng Dự Đoán Giá Đóng Cửa Cổ Phiếu Bằng LSTM")
-st.markdown("<p style='font-size: 16px; color: #555;'>Hệ thống sử dụng mạng thần kinh nhân tạo học sâu hồi quy (LSTM) để phân tích xu hướng chuỗi thời gian.</p>", unsafe_allow_html=True)
+st.title("📊 Ứng Dụng Dự Đoán Giá Đóng Cửa Cổ Phiếu Bằng LSTM")
 st.markdown("---")
 
 # ==============================================================================
 # CÁC HÀM XỬ LÝ LOGIC (SỬ DỤNG CACHE ĐỂ TĂNG TỐC ĐỘ APP)
 # ==============================================================================
-@st.cache_data(show_spinner="⏳ Đang tải dữ liệu từ Yahoo Finance...")
+@st.cache_data(show_spinner="Đang tải dữ liệu từ Yahoo Finance...")
 def load_data(ticker_symbol, start, end):
     df_stock = yf.download(ticker_symbol, start=start, end=end)
     return df_stock
@@ -70,7 +52,7 @@ def create_sequences(data, window_size=60):
         y.append(data[i])
     return np.array(X), np.array(y)
 
-@st.cache_resource(show_spinner="🧠 Đang huấn luyện mô hình học sâu LSTM (Có thể mất 1-2 phút)...")
+@st.cache_resource(show_spinner="Đang huấn luyện mô hình LSTM (Có thể mất 1-2 phút)...")
 def train_lstm_model(data_values):
     train_size = int(0.8 * len(data_values))
     train_data = data_values[:train_size]
@@ -122,23 +104,20 @@ def train_lstm_model(data_values):
 # ==============================================================================
 if run_analysis:
     if start_date >= end_date:
-        st.error("❌ Lỗi: Ngày bắt đầu phải nhỏ hơn ngày kết thúc phân tích!")
+        st.error("Lỗi: Ngày bắt đầu phải nhỏ hơn ngày kết thúc phân tích!")
     else:
         df = load_data(ticker, start_date, end_date)
         
         if df.empty:
-            st.error(f"❌ Không tìm thấy dữ liệu cho mã cổ phiếu '{ticker}'. Bạn hãy kiểm tra lại ký tự xem đúng chưa nhé!")
+            st.error(f"Không tìm thấy dữ liệu cho mã cổ phiếu '{ticker}'. Bạn hãy kiểm tra lại ký tự xem đúng chưa nhé!")
         else:
             col1, col2, col3 = st.columns(3)
-            with col1:
-                st.info(f"🔠 **Mã cổ phiếu:** {ticker}")
-            with col2:
-                st.info(f"📅 **Từ ngày:** {start_date}")
-            with col3:
-                st.info(f"📆 **Đến ngày:** {end_date}")
+            col1.metric("Mã cổ phiếu đang phân tích", ticker)
+            col2.metric("Từ ngày", str(start_date))
+            col3.metric("Đến ngày", str(end_date))
             
             st.subheader("📋 Bảng thông tin tổng quát về giá cổ phiếu (10 phiên mới nhất)")
-            st.dataframe(df.tail(10).style.format("{:.2f}").background_gradient(cmap='Blues'), use_container_width=True)
+            st.dataframe(df.tail(10).style.format("{:.2f}"), use_container_width=True)
             
             data_values = df[['Close']].values
             model, scaler, y_test_real, test_pred, train_scaled, test_scaled = train_lstm_model(data_values)
@@ -179,8 +158,8 @@ if run_analysis:
             f_col1, f_col2 = st.columns(2)
             
             with f_col1:
-                st.write("**Bảng giá trị dự báo cụ thể:**")
-                st.dataframe(df_forecast.style.format("{:.2f}").background_gradient(cmap='Blues'), use_container_width=True)
+                st.write("Bảng giá trị dự báo cụ thể:")
+                st.dataframe(df_forecast.style.format("{:.2f}"), use_container_width=True)
                 
             with f_col2:
                 fig = go.Figure()
@@ -188,35 +167,28 @@ if run_analysis:
                     x=list(range(len(y_test_real))), 
                     y=y_test_real.flatten(),
                     mode='lines',
-                    name='Giá thật thực tế (Tập Test)',
-                    line=dict(color='#002B49', width=2)
+                    name='Giá thật thực tế (Tập Test)'
                 ))
                 fig.add_trace(go.Scatter(
                     x=list(range(len(test_pred))), 
                     y=test_pred.flatten(),
                     mode='lines',
-                    name='Giá mô hình đoán thử',
-                    line=dict(color='#64B5F6', width=2)
+                    name='Giá mô hình đoán thử (Tập Test)'
                 ))
                 future_x = list(range(len(y_test_real), len(y_test_real) + forecast_days))
                 fig.add_trace(go.Scatter(
                     x=future_x, 
                     y=future_predictions.flatten(),
                     mode='lines+markers',
-                    name=f'Dự báo {forecast_days} ngày tới',
-                    line=dict(dash='dash', color='#007BFF', width=3),
-                    marker=dict(size=6, color='#0056b3')
+                    name=f'Dự báo tương lai ({forecast_days} ngày)',
+                    line=dict(dash='dash', color='red')
                 ))
                 fig.update_layout(
-                    title=f"Biểu đồ phân tích và xu hướng giá cổ phiếu {ticker}",
+                    title=f"Biểu đồ so sánh giá thật và kết quả dự báo cổ phiếu {ticker}",
                     xaxis_title="Số phiên thời gian giao dịch",
                     yaxis_title="Mức giá đóng cửa",
-                    paper_bgcolor='#f8f9fa',
-                    plot_bgcolor='#ffffff',
                     height=500
                 )
-                fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='#E3F2FD')
-                fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='#E3F2FD')
-                
                 st.plotly_chart(fig, use_container_width=True)
 else:
+    st.info("💡 Mẹo nhỏ: Bạn hãy điền mã cổ phiếu mong muốn và tuỳ chỉnh tham số ở thanh menu bên trái, sau đó bấm nút 'Bắt đầu Phân tích & Dự đoán' nhé!")
